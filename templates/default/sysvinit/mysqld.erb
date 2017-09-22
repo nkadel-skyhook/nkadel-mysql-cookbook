@@ -208,7 +208,7 @@ start() {
 
 # Reload <%= @mysql_name %>
 reload() {
-    <%= @mysqladmin_bin %> --extra-defaults-file=<%= @defaults_file %> reload
+    <%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> reload
     local ret=$?
     if [ $ret -eq 0 ]; then
         print_reload_success;
@@ -234,7 +234,7 @@ stop() {
     if running; then
 	# Always try this first, for more graceful shutdowns
         echo "Stopping MySQL instance <%= @mysql_name %> with mysqlamdin shutdown"
-	<%= @mysqladmin_bin %> --extra-defaults-file=<%= @defaults_file %> shutdown 2>&1 &
+	<%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> shutdown 2>&1 &
         local TIMEOUT=$STOPTIMEOUT
         # Timeout loop
         while [ $TIMEOUT -gt 0 ]; do
