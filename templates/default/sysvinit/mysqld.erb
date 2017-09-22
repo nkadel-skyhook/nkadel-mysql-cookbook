@@ -53,7 +53,7 @@ pid_exists() {
 # Use mysqladmin to ping the service as an invalid user over a socket
 running() {
     RUNNING=1
-    RESPONSE=`<%= @mysqladmin_bin %> --defaults-file=<%= @defaults_file %> --user=UNKNOWN_MYSQL_USER ping 2>&1`
+    RESPONSE=`<%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> --user=UNKNOWN_MYSQL_USER ping 2>&1`
     local mret=$?
     if pid_exists \
         && [ $mret -eq 0 ] \
