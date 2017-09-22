@@ -235,7 +235,7 @@ stop() {
 	# Always try this first, for more graceful shutdowns
         echo "Stopping MySQL instance <%= @mysql_name %> with mysqlamdin shutdown"
 	<%= @mysqladmin_bin %> --defaults-file=<%= @defaults_file %> shutdown 2>&1 &
-        local TIMEOUT=$STARTTIMEOUT
+        local TIMEOUT=$STOPTIMEOUT
         # Timeout loop
         while [ $TIMEOUT -gt 0 ]; do
             if [ -s <%= @pid_file %> ]; then
@@ -250,7 +250,7 @@ stop() {
             kstat=$?
         fi
 
-        local TIMEOUT=$STARTTIMEOUT
+        local TIMEOUT=$STOPTIMEOUT
         # Timeout loop
         while [ $TIMEOUT -gt 0 ]; do
             if [ -e <%= @pid_file %> ]; then
