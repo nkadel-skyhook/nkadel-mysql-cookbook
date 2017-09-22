@@ -232,25 +232,31 @@ status() {
 # Stop <%= @mysql_name %>
 stop() {
     if running; then
-	# Always try this first, to avoid slave replication failures
-        echo "Stopping slave on MySQL instance <%= @mysql_name %> with mysqladmin stop-slave"
-	STOPSLAVERESPONSE=`<%= @mysqladmin_bin %> --defaults-file=<%= @defaults_file %> stop-slave 2>&1`
 	# Always try this second, for more graceful shutdowns
         echo "Stopping MySQL instance <%= @mysql_name %> with mysqlamdin shutdown"
-	STOPRESPONSE=`<%= @mysqladmin_bin %> --defaults-file=<%= @defaults_file %> shutdown 2>&1`
+	<%= @mysqladmin_bin %> --defaults-file=<%= @defaults_file %> shutdown 2>&1 &
+        local TIMEOUT=$STARTTIMEOUT
+        # Timeout loop
+        while [ $TIMEOUT -gt 0 ]; do
+            if [ -e <%= @pid_file %> ]; then
+            sleep 1
+            fi
+	    let TIMEOUT=${TIMEOUT}-1
+        done
+
         if [ -f <%= @pid_file %> ]; then
             echo "Stopping MySQL instance <%= @mysql_name %> with kill"
             /bin/kill `cat <%= @pid_file %> 2>/dev/null`
             kstat=$?
         fi
 
-        # Timeout loop
         local TIMEOUT=$STARTTIMEOUT
+        # Timeout loop
         while [ $TIMEOUT -gt 0 ]; do
             if [ -e <%= @pid_file %> ]; then
             sleep 1
             fi
-	          let TIMEOUT=${TIMEOUT}-1
+	    let TIMEOUT=${TIMEOUT}-1
         done
 
         return $kstat
