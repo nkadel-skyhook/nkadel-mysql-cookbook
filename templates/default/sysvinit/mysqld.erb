@@ -30,9 +30,13 @@
 # Variables
 ####
 
-STARTTIMEOUT=900
-STOPTIMEOUT=900
+# Shorten from 900 to 300, make chef attribute in future
+STARTTIMEOUT=300
+STOPTIMEOUT=300
 PID_DELAY=60
+
+# Provide working HOME attribute, otherwise stripped by /sbin/service
+MYSQLADMINPREFIX="HOME=/root"
 
 ####
 # Helper functions
@@ -53,7 +57,7 @@ pid_exists() {
 # Use mysqladmin to ping the service as an invalid user over a socket
 running() {
     RUNNING=1
-    RESPONSE=`HOME=/root <%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> --user=UNKNOWN_MYSQL_USER ping 2>&1`
+    RESPONSE=`${MYSQLADMINPREFIX} <%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> --user=UNKNOWN_MYSQL_USER ping 2>&1`
     local mret=$?
     if pid_exists \
         && [ $mret -eq 0 ] \
@@ -208,7 +212,7 @@ start() {
 
 # Reload <%= @mysql_name %>
 reload() {
-    HOME=/root <%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> reload
+    ${MYSQLADMINPREFIX} <%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> reload
     local ret=$?
     if [ $ret -eq 0 ]; then
         print_reload_success;
@@ -232,11 +236,12 @@ status() {
 # Stop <%= @mysql_name %>
 stop() {
     if running; then
-	# Always try this first, for more graceful shutdowns
-        echo "Stopping MySQL instance <%= @mysql_name %> with mysqlamdin stop-slave"
-	HOME=/root <%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> stop-slave 2>&1 &
-        echo "Stopping MySQL instance <%= @mysql_name %> with mysqlamdin shutdown"
-	HOME=/root <%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> shutdown 2>&1 &
+	# Always try this first, for more graceful slave shutdow
+        echo "Stopping slave on MySQL instance <%= @mysql_name %> with mysqladmin stop-slave"
+	${MYSQLADMINPREFIX} <%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> stop-slave 2>&1
+	# mysqladmin shutdown does more graceful work than kill command
+        echo "Stopping MySQL instance <%= @mysql_name %> with mysqladmin shutdown"
+	${MYSQLADMINPREFIX} <%= @mysqladmin_bin %> --defaults-extra-file=<%= @defaults_file %> shutdown 2>&1 &
         local TIMEOUT=$STOPTIMEOUT
         # Timeout loop
         while [ $TIMEOUT -gt 0 ]; do
